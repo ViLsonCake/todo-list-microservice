@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  auth_postgres:
+    container_name: auth_postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - todo_storage:/data/postgres
+    ports:
+      - '5434:5432'
+
+  postgres_keycloak:
+    container_name: postgres_keycloak
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${KEYCLOAK_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: ${KEYCLOAK_DB}
+    volumes:
+      - keycloak_storage:/data/postgres
+    ports:
+      - '5433:5432'
+
+  keycloak:
+    container_name: keycloak-microservices
+    image: quay.io/keycloak/keycloak:22.0.5
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_SCHEMA: public
+      DB_DATABASE: ${KEYCLOAK_DB}
+      DB_USER: ${KEYCLOAK_USER}
+      DB_PASSWORD: ${KEYCLOAK_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_HOSTNAME: localhost
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres_keycloak
+    command:
+      - start-dev
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.1
+    container_name: todo_elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - '9200:9200'
+    volumes:
+      - todo_storage:/var/lib/elastic/data
+
+volumes:
+  keycloak_storage:
+  todo_storage:
