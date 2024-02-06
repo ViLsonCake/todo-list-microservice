@@ -1,0 +1,46 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: authorization-server
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_NAME}
+            authorization-grant-type: authorization_code
+            scope:
+              - openid
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/${KEYCLOAK_REALM_NAME}
+            user-name-attribute: preferred_username
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/${KEYCLOAK_REALM_NAME}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  datasource:
+    url: jdbc:postgresql://localhost:5434/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+eureka:
+  client:
+    service-url:
+      default-zone: http://localhost:8761/eureka-server
+
+  instance:
+    instance-id: ${spring.application.name}:${random.uuid}
+
+keycloak:
+  realm: ${KEYCLOAK_REALM_NAME}
+  server-url: http://localhost:8080
+  admin-client-id: ${KEYCLOAK_CLIENT_NAME}
+  admin-client-secret: ${KEYCLOAK_CLIENT_SECRET}
+  token-url: /realms/${keycloak.realm}/protocol/openid-connect/token
