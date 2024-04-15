@@ -56,6 +56,18 @@ services:
     volumes:
       - todo_storage:/var/lib/elastic/data
 
+  mongodb:
+    image: mongo:latest
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo_storage:/mongo/data
+
 volumes:
   keycloak_storage:
   todo_storage:
+  mongo_storage:
