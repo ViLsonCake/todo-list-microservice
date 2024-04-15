@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import project.vilsoncake.todocategoryservice.constant.DefaultCategory;
 import project.vilsoncake.todocategoryservice.document.CategoryDocument;
 import project.vilsoncake.todocategoryservice.dto.CategoryDto;
 import project.vilsoncake.todocategoryservice.exception.CategoryAlreadyExistsException;
@@ -13,6 +14,7 @@ import project.vilsoncake.todocategoryservice.service.CategoryService;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -59,17 +61,19 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoryDto> getAllCategoriesByOwner(Jwt jwt) {
+    public List<String> getAllCategoriesByOwner(Jwt jwt) {
         String username = jwt.getClaimAsString("preferred_username");
 
         if (username == null) {
             throw new UsernameNotFoundException("Username not found");
         }
 
-        return categoryRepository
+        List<String> userCategories = categoryRepository
                 .findAllByOwnerIgnoreCase(username)
-                .stream().map(CategoryDto::fromDocument)
+                .stream().map(CategoryDocument::getName)
                 .toList();
+
+        return Stream.concat(userCategories.stream(), DefaultCategory.defaultCategories.stream()).toList();
     }
 
     @Override

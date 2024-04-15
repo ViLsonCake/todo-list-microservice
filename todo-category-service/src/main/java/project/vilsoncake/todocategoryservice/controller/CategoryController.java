@@ -35,7 +35,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, List<CategoryDto>>> getAllCategoriesByOwner(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Map<String, List<String >>> getAllCategoriesByOwner(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(
                 Map.of("categories", categoryService.getAllCategoriesByOwner(jwt))
         );

@@ -8,6 +8,6 @@ import java.util.List;
 public interface CategoryService {
     CategoryDto addCategory(Jwt jwt, CategoryDto categoryDto);
     String  removeCategory(Jwt jwt, String name);
-    List<CategoryDto> getAllCategoriesByOwner(Jwt jwt);
+    List<String> getAllCategoriesByOwner(Jwt jwt);
     String removeAllCategoriesByOwner(Jwt jwt);
 }
