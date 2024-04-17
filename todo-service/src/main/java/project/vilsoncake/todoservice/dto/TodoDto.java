@@ -22,4 +22,13 @@ public class TodoDto {
         todoDto.setCompleted(todoDocument.isCompleted());
         return todoDto;
     }
+
+    public static TodoDto fromRequest(TodoRequest todoRequest) {
+        TodoDto todoDto = new TodoDto();
+        todoDto.setTitle(todoRequest.getTitle().trim());
+        todoDto.setCategory(todoRequest.getCategory().trim());
+        todoDto.setText(todoRequest.getText().trim());
+        todoDto.setCompleted(false);
+        return todoDto;
+    }
 }

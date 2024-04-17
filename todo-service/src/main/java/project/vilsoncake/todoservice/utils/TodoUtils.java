@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static project.vilsoncake.todoservice.constant.PatternConst.REGEX_TODO_TITLE_PATTERN;
+import static project.vilsoncake.todoservice.constant.PatternConst.REGEX_TODO_TITLE_DUPLICATE_PATTERN;
 
 @Component
 public class TodoUtils {
 
     public int getDuplicateCount(List<TodoDocument> todoDocuments) {
-        Pattern pattern = Pattern.compile(REGEX_TODO_TITLE_PATTERN);
+        Pattern pattern = Pattern.compile(REGEX_TODO_TITLE_DUPLICATE_PATTERN);
 
         List<Integer> numbers = new ArrayList<>();
 

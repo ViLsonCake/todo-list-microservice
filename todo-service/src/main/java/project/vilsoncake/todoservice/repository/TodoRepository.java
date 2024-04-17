@@ -9,8 +9,9 @@ import java.util.UUID;
 
 public interface TodoRepository extends ElasticsearchRepository<TodoDocument, UUID> {
     Optional<TodoDocument> findByTitleIgnoreCaseAndOwnerIgnoreCase(String title, String owner);
-    List<TodoDocument> findAllByTitleLikeAndOwnerIgnoreCase(String likePattern, String owner);
+    List<TodoDocument> findAllByTitleContainingIgnoreCaseAndOwnerIgnoreCase(String likePattern, String owner);
     List<TodoDocument> findAllByOwnerIgnoreCase(String owner);
     List<TodoDocument> findAllByOwnerIgnoreCaseAndCompletedIsTrue(String owner);
+    List<TodoDocument> findAllByOwnerIgnoreCaseAndCompletedIsFalse(String owner);
     List<TodoDocument> findAllByOwnerIgnoreCaseAndCategoryIgnoreCase(String owner, String category);
 }
