@@ -1,6 +1,6 @@
 package project.vilsoncake.authorizationserver.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TokenDto {
-    @JsonAlias("access_token")
+    @JsonProperty("access_token")
     private String accessToken;
 }
