@@ -1,6 +1,7 @@
 package project.vilsoncake.todoservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -111,7 +112,26 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public List<TodoDto> getAllUserTodosByFilter(Jwt jwt, String filter) {
+    public List<TodoDto> searchTodos(Jwt jwt, String searchString, PageRequest pageRequest) {
+        Query query = NativeQuery.builder()
+                .withQuery(q -> q
+                        .multiMatch(m -> m
+                                .fields(List.of("title", "text"))
+                                .query(searchString)
+                                .fuzziness("AUTO")
+                        )
+                )
+                .withPageable(pageRequest)
+                .build();
+
+        return elasticsearchOperations
+                .search(query, TodoDocument.class)
+                .stream().map(SearchHit::getContent)
+                .map(TodoDto::fromDocument).toList();
+    }
+
+    @Override
+    public List<TodoDto> getAllUserTodosByFilter(Jwt jwt, String filter, PageRequest pageRequest) {
         String username = jwt.getClaimAsString("preferred_username");
 
         if (username == null) {
@@ -119,31 +139,33 @@ public class TodoServiceImpl implements TodoService {
         }
 
         return switch (filter) {
-            case FILTER_ALL_TODOS ->
-                    todoRepository
-                            .findAllByOwnerIgnoreCase(username)
-                            .stream().map(TodoDto::fromDocument).toList();
-            case FILTER_ONLY_COMPLETED_TODOS ->
-                    todoRepository
-                            .findAllByOwnerIgnoreCaseAndCompletedIsTrue(username)
-                            .stream().map(TodoDto::fromDocument).toList();
-            case FILTER_ONLY_NOT_COMPLETED_TODOS ->
-                    todoRepository
-                            .findAllByOwnerIgnoreCaseAndCompletedIsFalse(username)
-                            .stream().map(TodoDto::fromDocument).toList();
+            case FILTER_ALL_TODOS -> todoRepository
+                            .findAllByOwnerIgnoreCase(username, pageRequest)
+                            .getContent().stream().map(TodoDto::fromDocument).toList();
+
+            case FILTER_ONLY_COMPLETED_TODOS -> todoRepository
+                            .findAllByOwnerIgnoreCaseAndCompletedIsTrue(username, pageRequest)
+                            .getContent().stream().map(TodoDto::fromDocument).toList();
+
+            case FILTER_ONLY_NOT_COMPLETED_TODOS -> todoRepository
+                            .findAllByOwnerIgnoreCaseAndCompletedIsFalse(username, pageRequest)
+                            .getContent().stream().map(TodoDto::fromDocument).toList();
+
             default -> throw new IncorrectTodoFilterException(String.format("\"%s\" is incorrect filter", filter));
         };
 
     }
 
     @Override
-    public List<TodoDto> getAllUserTodosByCategory(Jwt jwt, String category) {
+    public List<TodoDto> getAllUserTodosByCategory(Jwt jwt, String category, PageRequest pageRequest) {
         String username = jwt.getClaimAsString("preferred_username");
 
         if (username == null) {
             throw new UsernameNotFoundException("Username not found");
         }
 
-        return todoRepository.findAllByOwnerIgnoreCaseAndCategoryIgnoreCase(username, category).stream().map(TodoDto::fromDocument).toList();
+        return todoRepository
+                .findAllByOwnerIgnoreCaseAndCategoryIgnoreCase(username, category, pageRequest)
+                .stream().map(TodoDto::fromDocument).toList();
     }
 }

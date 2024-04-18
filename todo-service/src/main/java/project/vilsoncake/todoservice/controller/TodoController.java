@@ -2,6 +2,7 @@ package project.vilsoncake.todoservice.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,16 +41,31 @@ public class TodoController {
     @GetMapping
     public ResponseEntity<Map<String, List<TodoDto>>> getAllUserTodos(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestParam(name = "filter", required = false, defaultValue = "all") String filter) {
-        return ResponseEntity.ok(Map.of("todos", todoService.getAllUserTodosByFilter(jwt, filter)));
+            @RequestParam(name = "filter", required = false, defaultValue = "all") String filter,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(Map.of("todos", todoService.getAllUserTodosByFilter(jwt, filter, PageRequest.of(page, size))));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Map<String, List<TodoDto>>> searchTodos(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(name = "s") String searchString,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(Map.of("todos", todoService.searchTodos(jwt, searchString, PageRequest.of(page, size))));
     }
 
     @GetMapping("/{category}")
     public ResponseEntity<Map<String, List<TodoDto>>> getAllUserTodosByCategory(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable String category
+            @PathVariable String category,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "5") int size
     ) {
-        return ResponseEntity.ok(Map.of("todos", todoService.getAllUserTodosByCategory(jwt, category)));
+        return ResponseEntity.ok(Map.of("todos", todoService.getAllUserTodosByCategory(jwt, category, PageRequest.of(page, size))));
     }
 
     @PatchMapping
