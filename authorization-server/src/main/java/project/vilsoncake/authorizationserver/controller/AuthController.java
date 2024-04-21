@@ -5,12 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import project.vilsoncake.authorizationserver.dto.LoginDto;
-import project.vilsoncake.authorizationserver.dto.RegistrationDto;
 import project.vilsoncake.authorizationserver.dto.TokenDto;
 import project.vilsoncake.authorizationserver.service.AuthService;
-import project.vilsoncake.authorizationserver.service.UserService;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -18,12 +14,6 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
-
-    @PostMapping
-    public ResponseEntity<Map<String, String>> createUser(@RequestBody RegistrationDto registrationDto) {
-        return ResponseEntity.ok(userService.createUser(registrationDto));
-    }
 
     @PostMapping("/login")
     public ResponseEntity<TokenDto> loginUser(@RequestBody LoginDto loginDto, HttpServletResponse response) {

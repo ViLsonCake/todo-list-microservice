@@ -7,9 +7,14 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import project.vilsoncake.authorizationserver.dto.ChangeUsernameDto;
 import project.vilsoncake.authorizationserver.dto.RegistrationDto;
 import project.vilsoncake.authorizationserver.entity.UserEntity;
+import project.vilsoncake.authorizationserver.exception.UserAlreadyExistsException;
 import project.vilsoncake.authorizationserver.property.KeycloakProperties;
 import project.vilsoncake.authorizationserver.repository.UserRepository;
 import project.vilsoncake.authorizationserver.service.UserService;
@@ -60,5 +65,61 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userEntity);
 
         return Map.of("message", String.format("User \"%s\" added", registrationDto.getUsername()));
+    }
+
+    @Override
+    public UserRepresentation getUserByUsername(String username) {
+        UsersResource usersResource = keycloak.realm(keycloakProperties.getRealm()).users();
+        return usersResource.searchByUsername(username, true).get(0);
+    }
+
+    @Transactional
+    @Override
+    public Map<String, String> changeUsername(Jwt jwt, ChangeUsernameDto changeUsernameDto) {
+        String username = jwt.getClaimAsString("preferred_username");
+
+        if (username == null) {
+            throw new UsernameNotFoundException("Username not found");
+        }
+
+        UserRepresentation userRepresentation = getUserByUsername(username);
+        userRepresentation.setUsername(changeUsernameDto.getNewUsername());
+
+        if (userRepository.findByUsernameIgnoreCase(changeUsernameDto.getNewUsername()) != null) {
+            throw new UserAlreadyExistsException(String.format("User \"%s\" already exists", changeUsernameDto.getNewUsername()));
+        }
+
+        UserEntity userEntity = userRepository.findByUsernameIgnoreCase(username);
+        userEntity.setUsername(changeUsernameDto.getNewUsername());
+
+        keycloak.realm(keycloakProperties.getRealm())
+                .users()
+                .get(userRepresentation.getId())
+                .update(userRepresentation);
+
+        return Map.of("message", "Username has been changed");
+    }
+
+    @Override
+    public Map<String, String> removeUser(Jwt jwt) {
+        String username = jwt.getClaimAsString("preferred_username");
+
+        if (username == null) {
+            throw new UsernameNotFoundException("Username not found");
+        }
+
+        UserRepresentation userRepresentation = getUserByUsername(username);
+
+        Response response = keycloak.realm(keycloakProperties.getRealm())
+                .users()
+                .delete(userRepresentation.getId());
+
+        if (response.getStatus() < 300 && response.getStatus() >= 200) {
+            UserEntity userEntity = userRepository.findByUsernameIgnoreCase(username);
+            userRepository.delete(userEntity);
+            return Map.of("message", String.format("User \"%s\" has been removed", username));
+        }
+
+        throw new UsernameNotFoundException("User not been removed");
     }
 }
