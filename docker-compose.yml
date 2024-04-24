@@ -72,7 +72,7 @@ services:
     ports:
       - '2181:2181'
     networks:
-      - kafka-net
+      - kafka-network
 
   kafka:
     image: wurstmeister/kafka:latest
