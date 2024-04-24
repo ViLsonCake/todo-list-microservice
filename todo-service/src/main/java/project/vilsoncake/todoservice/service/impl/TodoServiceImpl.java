@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import project.vilsoncake.todoservice.document.TodoDocument;
 import project.vilsoncake.todoservice.dto.TodoDto;
 import project.vilsoncake.todoservice.dto.TodoRequest;
+import project.vilsoncake.todoservice.dto.UserEventDto;
 import project.vilsoncake.todoservice.exception.IncorrectTodoFilterException;
+import project.vilsoncake.todoservice.exception.IncorrectUserEventPayloadException;
 import project.vilsoncake.todoservice.exception.TodoNotFoundException;
 import project.vilsoncake.todoservice.repository.TodoRepository;
 import project.vilsoncake.todoservice.service.TodoService;
@@ -167,5 +169,28 @@ public class TodoServiceImpl implements TodoService {
         return todoRepository
                 .findAllByOwnerIgnoreCaseAndCategoryIgnoreCase(username, category, pageRequest)
                 .stream().map(TodoDto::fromDocument).toList();
+    }
+
+    @Override
+    public boolean changeUserUsernameInTodos(UserEventDto userEventDto) {
+        String newUsername = userEventDto.getPayload().get("newUsername");
+
+        if (newUsername == null) {
+            throw new IncorrectUserEventPayloadException("Incorrect user event payload");
+        }
+
+        List<TodoDocument> todos = todoRepository.findAllByOwnerIgnoreCase(userEventDto.getUsername());
+        todos.forEach(todo -> todo.setOwner(newUsername));
+        todoRepository.saveAll(todos);
+
+        return true;
+    }
+
+    @Override
+    public boolean removeAllUserTodos(UserEventDto userEventDto) {
+        List<TodoDocument> todos = todoRepository.findAllByOwnerIgnoreCase(userEventDto.getUsername());
+        todoRepository.deleteAll(todos);
+
+        return true;
     }
 }

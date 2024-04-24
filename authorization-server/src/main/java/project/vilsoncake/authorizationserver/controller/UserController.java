@@ -1,5 +1,6 @@
 package project.vilsoncake.authorizationserver.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,12 +33,12 @@ public class UserController {
     public ResponseEntity<Map<String, String>> changeUsername(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody ChangeUsernameDto changeUsernameDto
-    ) {
+    ) throws JsonProcessingException {
         return ResponseEntity.ok(userService.changeUsername(jwt, changeUsernameDto));
     }
 
     @DeleteMapping
-    public ResponseEntity<Map<String, String>> removeUser(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Map<String, String>> removeUser(@AuthenticationPrincipal Jwt jwt) throws JsonProcessingException {
         return ResponseEntity.ok(userService.removeUser(jwt));
     }
 }

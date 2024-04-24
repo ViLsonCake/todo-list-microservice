@@ -1,5 +1,6 @@
 package project.vilsoncake.authorizationserver.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.vilsoncake.authorizationserver.dto.ChangeUsernameDto;
 import project.vilsoncake.authorizationserver.dto.RegistrationDto;
+import project.vilsoncake.authorizationserver.dto.UserEventDto;
 import project.vilsoncake.authorizationserver.entity.UserEntity;
 import project.vilsoncake.authorizationserver.exception.UserAlreadyExistsException;
 import project.vilsoncake.authorizationserver.property.KeycloakProperties;
+import project.vilsoncake.authorizationserver.property.UserEventProperties;
 import project.vilsoncake.authorizationserver.repository.UserRepository;
+import project.vilsoncake.authorizationserver.service.KafkaProducer;
 import project.vilsoncake.authorizationserver.service.UserService;
 
 import java.util.List;
@@ -30,7 +34,9 @@ public class UserServiceImpl implements UserService {
 
     private final Keycloak keycloak;
     private final KeycloakProperties keycloakProperties;
+    private final UserEventProperties userEventProperties;
     private final UserRepository userRepository;
+    private final KafkaProducer kafkaProducer;
 
     @Override
     public Map<String, String> createUser(RegistrationDto registrationDto) {
@@ -75,7 +81,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public Map<String, String> changeUsername(Jwt jwt, ChangeUsernameDto changeUsernameDto) {
+    public Map<String, String> changeUsername(Jwt jwt, ChangeUsernameDto changeUsernameDto) throws JsonProcessingException {
         String username = jwt.getClaimAsString("preferred_username");
 
         if (username == null) {
@@ -97,11 +103,22 @@ public class UserServiceImpl implements UserService {
                 .get(userRepresentation.getId())
                 .update(userRepresentation);
 
+        UserEventDto changeUserEventDto = new UserEventDto(
+                userEventProperties.getUsernameChangeEventType(),
+                username,
+                Map.of(
+                        "newUsername",
+                        changeUsernameDto.getNewUsername()
+                )
+        );
+
+        kafkaProducer.sendUserEvent(changeUserEventDto);
+
         return Map.of("message", "Username has been changed");
     }
 
     @Override
-    public Map<String, String> removeUser(Jwt jwt) {
+    public Map<String, String> removeUser(Jwt jwt) throws JsonProcessingException {
         String username = jwt.getClaimAsString("preferred_username");
 
         if (username == null) {
@@ -119,6 +136,14 @@ public class UserServiceImpl implements UserService {
             userRepository.delete(userEntity);
             return Map.of("message", String.format("User \"%s\" has been removed", username));
         }
+
+        UserEventDto removeUserEventDto = new UserEventDto(
+                userEventProperties.getUserRemoveEventType(),
+                username,
+                Map.of()
+        );
+
+        kafkaProducer.sendUserEvent(removeUserEventDto);
 
         throw new UsernameNotFoundException("User not been removed");
     }

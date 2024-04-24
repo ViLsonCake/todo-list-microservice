@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import project.vilsoncake.todocategoryservice.constant.DefaultCategory;
 import project.vilsoncake.todocategoryservice.document.CategoryDocument;
 import project.vilsoncake.todocategoryservice.dto.CategoryDto;
+import project.vilsoncake.todocategoryservice.dto.UserEventDto;
 import project.vilsoncake.todocategoryservice.exception.CategoryAlreadyExistsException;
 import project.vilsoncake.todocategoryservice.exception.CategoryNotFoundException;
 import project.vilsoncake.todocategoryservice.repository.CategoryRepository;
@@ -77,14 +78,21 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public String removeAllCategoriesByOwner(Jwt jwt) {
-        String username = jwt.getClaimAsString("preferred_username");
+    public boolean changeCategoriesOwnerUsername(UserEventDto userEventDto) {
+        String newUsername = userEventDto.getPayload().get("newUsername");
 
-        if (username == null) {
-            throw new UsernameNotFoundException("Username not found");
-        }
+        List<CategoryDocument> categories = categoryRepository.findAllByOwnerIgnoreCase(userEventDto.getUsername());
+        categories.forEach(category -> category.setOwner(newUsername));
+        categoryRepository.saveAll(categories);
 
-        categoryRepository.deleteAll(categoryRepository.findAllByOwnerIgnoreCase(username));
-        return username;
+        return true;
+    }
+
+    @Override
+    public boolean removeAllCategoriesByOwner(UserEventDto userEventDto) {
+        categoryRepository.deleteAll(
+                categoryRepository.findAllByOwnerIgnoreCase(userEventDto.getUsername())
+        );
+        return true;
     }
 }

@@ -51,15 +51,4 @@ public class CategoryController {
                 )
         );
     }
-
-    @DeleteMapping("/all")
-    public ResponseEntity<Map<String, String>> removeAllCategoriesByOwner(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(
-                Map.of("message", String
-                        .format("All categories of owner %s are removed",
-                                categoryService.removeAllCategoriesByOwner(jwt)
-                        )
-                )
-        );
-    }
 }

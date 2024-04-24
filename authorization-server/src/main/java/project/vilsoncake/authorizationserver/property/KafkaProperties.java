@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 public class KafkaProperties {
     private String url;
     private String topicName;
+    private String groupId;
     private int partitionsCount;
     private short replicationFactor;
 }
