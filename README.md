@@ -11,6 +11,7 @@ The application is a hackneyed todo list idea implemented on a microservice arch
 + MongoDB
 + Elasticsearch
 + Keycloak
++ Apache Kafka
 + Docker
 
 ### Application modules
