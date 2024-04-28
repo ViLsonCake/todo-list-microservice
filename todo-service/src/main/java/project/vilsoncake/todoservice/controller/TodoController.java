@@ -28,12 +28,7 @@ public class TodoController {
             @Valid @RequestBody TodoRequest todoRequest
     ) {
         return new ResponseEntity<>(
-                Map.of("message", String
-                        .format("Todo \"%s\" has been added",
-                                todoService.addTodo(jwt, todoRequest)
-                                        .getTitle()
-                        )
-                ),
+                Map.of("message", String.format("Todo \"%s\" has been added", todoService.addTodo(jwt, todoRequest).getTitle())),
                 HttpStatus.CREATED
         );
     }
@@ -82,12 +77,7 @@ public class TodoController {
             @RequestParam String title
     ) {
         return ResponseEntity.ok(
-                Map.of(
-                        "message", String
-                                .format(
-                                        "Todo \"%s\" has been removed", todoService.removeTodo(jwt, title)
-                                )
-                )
+                Map.of("message", String.format("Todo \"%s\" has been removed", todoService.removeTodo(jwt, title)))
         );
     }
 }
