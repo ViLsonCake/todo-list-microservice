@@ -2,6 +2,7 @@ package project.vilsoncake.authorizationserver.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import project.vilsoncake.authorizationserver.dto.LoginDto;
@@ -16,7 +17,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<TokenDto> loginUser(@RequestBody LoginDto loginDto, HttpServletResponse response) {
+    public ResponseEntity<TokenDto> loginUser(@RequestBody LoginDto loginDto, HttpServletResponse response) throws InvalidCredentialsException {
         return ResponseEntity.ok(authService.loginUser(loginDto, response));
     }
 

@@ -3,12 +3,14 @@ package project.vilsoncake.authorizationserver.service.impl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import project.vilsoncake.authorizationserver.dto.KeycloakTokenResponse;
 import project.vilsoncake.authorizationserver.dto.LoginDto;
 import project.vilsoncake.authorizationserver.dto.TokenDto;
@@ -26,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private final WebClient webClient;
 
     @Override
-    public TokenDto loginUser(LoginDto loginDto, HttpServletResponse response) {
+    public TokenDto loginUser(LoginDto loginDto, HttpServletResponse response) throws InvalidCredentialsException {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", PASSWORD);
         body.add("client_id", keycloakProperties.getAdminClientId());
@@ -34,24 +36,26 @@ public class AuthServiceImpl implements AuthService {
         body.add("username", loginDto.getUsername());
         body.add("password", loginDto.getPassword());
 
-        KeycloakTokenResponse tokenResponse = webClient.post()
-                .uri(keycloakProperties.getTokenUrl())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(body))
-                .retrieve()
-                .bodyToMono(KeycloakTokenResponse.class)
-                .block();
+        try {
+            KeycloakTokenResponse tokenResponse = webClient.post()
+                    .uri(keycloakProperties.getTokenUrl())
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData(body))
+                    .retrieve()
+                    .bodyToMono(KeycloakTokenResponse.class)
+                    .block();
+            if (tokenResponse == null) {
+                throw new RuntimeException("Token response is null");
+            }
+            Cookie cookie = new Cookie("refresh_token", tokenResponse.getRefreshToken());
+            cookie.setMaxAge(daysToSeconds(60));
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
 
-        if (tokenResponse == null) {
-            throw new RuntimeException("Token response is null");
+            return new TokenDto(tokenResponse.getAccessToken());
+        } catch (WebClientResponseException e) {
+            throw new InvalidCredentialsException("Incorrect username or password");
         }
-
-        Cookie cookie = new Cookie("refresh_token", tokenResponse.getRefreshToken());
-        cookie.setMaxAge(daysToSeconds(60));
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
-
-        return new TokenDto(tokenResponse.getAccessToken());
     }
 
     @Override
