@@ -41,6 +41,9 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:testcontainers:1.19.7'
+    testImplementation 'com.github.dasniko:testcontainers-keycloak:3.3.0'
 }
 
 dependencyManagement {
