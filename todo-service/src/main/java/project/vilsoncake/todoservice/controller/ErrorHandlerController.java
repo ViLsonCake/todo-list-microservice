@@ -35,6 +35,6 @@ public class ErrorHandlerController {
     @ExceptionHandler
     public ResponseEntity<Map<String, String>> incorrectTodoFilterException(IncorrectTodoFilterException exception) {
         Map<String, String> body = Map.of("message", exception.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 }
