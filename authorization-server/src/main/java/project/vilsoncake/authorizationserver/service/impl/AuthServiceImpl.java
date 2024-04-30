@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import project.vilsoncake.authorizationserver.dto.KeycloakTokenResponse;
 import project.vilsoncake.authorizationserver.dto.LoginDto;
 import project.vilsoncake.authorizationserver.dto.TokenDto;
+import project.vilsoncake.authorizationserver.exception.InvalidRefreshTokenException;
 import project.vilsoncake.authorizationserver.property.KeycloakProperties;
 import project.vilsoncake.authorizationserver.service.AuthService;
 
@@ -66,24 +67,28 @@ public class AuthServiceImpl implements AuthService {
         body.add("client_secret", keycloakProperties.getAdminClientSecret());
         body.add("refresh_token", refreshToken);
 
-        KeycloakTokenResponse tokenResponse = webClient.post()
-                .uri(keycloakProperties.getTokenUrl())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(body))
-                .retrieve()
-                .bodyToMono(KeycloakTokenResponse.class)
-                .block();
+        try {
+            KeycloakTokenResponse tokenResponse = webClient.post()
+                    .uri(keycloakProperties.getTokenUrl())
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData(body))
+                    .retrieve()
+                    .bodyToMono(KeycloakTokenResponse.class)
+                    .block();
 
-        if (tokenResponse == null) {
-            throw new RuntimeException("Token response is null");
+            if (tokenResponse == null) {
+                throw new RuntimeException("Token response is null");
+            }
+
+            Cookie cookie = new Cookie("refresh_token", tokenResponse.getRefreshToken());
+            cookie.setMaxAge(daysToSeconds(60));
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
+
+            return new TokenDto(tokenResponse.getAccessToken());
+        } catch (WebClientResponseException e) {
+            throw new InvalidRefreshTokenException("Invalid refresh token");
         }
-
-        Cookie cookie = new Cookie("refresh_token", tokenResponse.getRefreshToken());
-        cookie.setMaxAge(daysToSeconds(60));
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
-
-        return new TokenDto(tokenResponse.getAccessToken());
     }
 
     private int daysToSeconds(int days) {
