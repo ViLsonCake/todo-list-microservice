@@ -16,9 +16,13 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
+import project.vilsoncake.authorizationserver.entity.UserEntity;
+import project.vilsoncake.authorizationserver.repository.UserRepository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
+import java.util.stream.StreamSupport;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @ExtendWith(SpringExtension.class)
@@ -28,6 +32,9 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
 
     static final KeycloakContainer keycloakContainer = new KeycloakContainer("quay.io/keycloak/keycloak:22.0.5")
             .withRealmImportFile("keycloak/realm-export.json");
@@ -59,23 +66,40 @@ class UserControllerTest {
     @Test
     @DisplayName("Create user test with valid user data")
     void createUser_withValidUserData() throws Exception {
-        String jsonRequest = "{\"username\":\"newuser\",\"email\":\"example@gmail.com\",\"password\":\"testpass\"}";
+        String username = "newuser";
+        String password = "testpass";
+        String createUserRequest = String.format("{\"username\":\"%s\",\"email\":\"example@gmail.com\",\"password\":\"%s\"}", username, password);
+        String tokenRequest = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+        List<UserEntity> usersBeforeRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         var response = mockMvc.perform(
                 post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest)
+                        .content(createUserRequest)
         ).andReturn();
+
+        var tokenResponse = mockMvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(tokenRequest)
+        ).andReturn();
+
+        List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         // When
         assertEquals(response.getResponse().getStatus(), HttpStatus.CREATED.value());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+        assertTrue(response.getResponse().getContentAsString().contains(username));
+        assertEquals(usersAfterRequest.size(), usersBeforeRequest.size() + 1);
+        assertNotNull(userRepository.findByUsernameIgnoreCase("newuser"));
+        assertEquals(tokenResponse.getResponse().getStatus(), HttpStatus.OK.value());
     }
 
     @Test
     @DisplayName("Create user test with conflict username")
     void createUser_withConflictUsername() throws Exception {
         String jsonRequest = "{\"username\":\"testuser\",\"email\":\"example@gmail.com\",\"password\":\"testpass\"}";
+        List<UserEntity> usersBeforeRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         var response = mockMvc.perform(
                 post("/users")
@@ -83,15 +107,19 @@ class UserControllerTest {
                         .content(jsonRequest)
         ).andReturn();
 
+        List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
+
         // When
         assertEquals(response.getResponse().getStatus(), HttpStatus.CONFLICT.value());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+        assertEquals(usersBeforeRequest.size(), usersAfterRequest.size());
     }
 
     @Test
     @DisplayName("Create user test with conflict email")
     void createUser_withConflictEmail() throws Exception {
         String jsonRequest = "{\"username\":\"test\",\"email\":\"testuser@gmail.com\",\"password\":\"testpass\"}";
+        List<UserEntity> usersBeforeRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         var response = mockMvc.perform(
                 post("/users")
@@ -99,8 +127,11 @@ class UserControllerTest {
                         .content(jsonRequest)
         ).andReturn();
 
+        List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
+
         // When
         assertEquals(response.getResponse().getStatus(), HttpStatus.CONFLICT.value());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+        assertEquals(usersBeforeRequest.size(), usersAfterRequest.size());
     }
 }
