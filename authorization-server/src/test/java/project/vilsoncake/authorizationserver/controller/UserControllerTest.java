@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
+import org.apache.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -87,12 +87,12 @@ class UserControllerTest {
         List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.CREATED.value());
+        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_CREATED);
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertTrue(response.getResponse().getContentAsString().contains(username));
         assertEquals(usersAfterRequest.size(), usersBeforeRequest.size() + 1);
         assertNotNull(userRepository.findByUsernameIgnoreCase("newuser"));
-        assertEquals(tokenResponse.getResponse().getStatus(), HttpStatus.OK.value());
+        assertEquals(tokenResponse.getResponse().getStatus(), HttpStatus.SC_OK);
     }
 
     @Test
@@ -110,7 +110,7 @@ class UserControllerTest {
         List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.CONFLICT.value());
+        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_CONFLICT);
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertEquals(usersBeforeRequest.size(), usersAfterRequest.size());
     }
@@ -130,7 +130,7 @@ class UserControllerTest {
         List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.CONFLICT.value());
+        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_CONFLICT);
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertEquals(usersBeforeRequest.size(), usersAfterRequest.size());
     }
