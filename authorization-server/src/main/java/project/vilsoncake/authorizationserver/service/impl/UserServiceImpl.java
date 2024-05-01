@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -60,7 +61,11 @@ public class UserServiceImpl implements UserService {
         UsersResource usersResponse = keycloak.realm(keycloakProperties.getRealm()).users();
         Response response = usersResponse.create(user);
 
-        if (response.getStatus() != 201) {
+        if (response.getStatus() == HttpStatus.SC_CONFLICT) {
+            throw new UserAlreadyExistsException("User with same username or email already exists");
+        }
+
+        if (response.getStatus() != HttpStatus.SC_CREATED) {
             throw new RuntimeException("User has not been added");
         }
 
