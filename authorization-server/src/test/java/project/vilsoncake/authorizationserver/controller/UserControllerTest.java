@@ -24,8 +24,7 @@ import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -236,5 +235,39 @@ class UserControllerTest {
         assertEquals(HttpStatus.SC_CONFLICT, changeUserResponse.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertNotNull(userRepository.findByUsernameIgnoreCase(username));
+    }
+
+    @Test
+    @DisplayName("Remove user test")
+    void removeUser() throws Exception {
+        String username = "removeUser";
+        String email = "removeuser@gmail.com";
+        String password = "testpass";
+        String createUserRequest = String.format("{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\"}", username, email, password);
+        String tokenRequest = "{\"username\":\"%s\",\"password\":\"%s\"}";
+
+        var response = mockMvc.perform(
+                post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createUserRequest)
+        ).andReturn();
+
+        var tokenResponse = mockMvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format(tokenRequest, username, password))
+        ).andReturn();
+
+        String accessToken = objectMapper.readValue(tokenResponse.getResponse().getContentAsString(), TokenDto.class).getAccessToken();
+
+        var removeUserResponse = mockMvc.perform(
+                delete("/users")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+        ).andReturn();
+
+        // When
+        assertEquals(HttpStatus.SC_OK, removeUserResponse.getResponse().getStatus());
+        assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+        assertNull(userRepository.findByUsernameIgnoreCase(username));
     }
 }
