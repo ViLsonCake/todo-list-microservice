@@ -83,7 +83,7 @@ class AuthControllerTest {
         Matcher matcher = pattern.matcher(resultJson);
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_OK);
+        assertEquals(HttpStatus.SC_OK, response.getResponse().getStatus());
         assertNotNull(response.getResponse().getCookie("refresh_token"));
         assertTrue(response.getResponse().getCookie("refresh_token").isHttpOnly());
         assertTrue(matcher.find());
@@ -101,7 +101,7 @@ class AuthControllerTest {
         ).andReturn();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_UNAUTHORIZED);
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
     }
 
@@ -136,7 +136,7 @@ class AuthControllerTest {
         Matcher matcher = pattern.matcher(resultJson);
 
         // When
-        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.SC_OK);
+        assertEquals(HttpStatus.SC_OK, refreshResponse.getResponse().getStatus());
         assertNotNull(refreshResponse.getResponse().getCookie("refresh_token"));
         assertTrue(refreshResponse.getResponse().getCookie("refresh_token").isHttpOnly());
         assertTrue(matcher.find());
@@ -168,7 +168,7 @@ class AuthControllerTest {
         ).andReturn();
 
         // When
-        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.SC_UNAUTHORIZED);
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, refreshResponse.getResponse().getStatus());
     }
 
     @Test
@@ -197,7 +197,7 @@ class AuthControllerTest {
         ).andReturn();
 
         // When
-        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.SC_UNAUTHORIZED);
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, refreshResponse.getResponse().getStatus());
         assertTrue(refreshResponse.getResponse().getContentAsString().contains("\"message\":"));
     }
 }

@@ -105,12 +105,12 @@ class UserControllerTest {
         List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_CREATED);
+        assertEquals(HttpStatus.SC_CREATED, response.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertTrue(response.getResponse().getContentAsString().contains(username));
-        assertEquals(usersAfterRequest.size(), usersBeforeRequest.size() + 1);
+        assertEquals(usersBeforeRequest.size() + 1, usersAfterRequest.size());
         assertNotNull(userRepository.findByUsernameIgnoreCase("newuser"));
-        assertEquals(tokenResponse.getResponse().getStatus(), HttpStatus.SC_OK);
+        assertEquals(HttpStatus.SC_OK, tokenResponse.getResponse().getStatus());
     }
 
     @Test
@@ -128,7 +128,7 @@ class UserControllerTest {
         List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_CONFLICT);
+        assertEquals(HttpStatus.SC_CONFLICT, response.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertEquals(usersBeforeRequest.size(), usersAfterRequest.size());
     }
@@ -148,7 +148,7 @@ class UserControllerTest {
         List<UserEntity> usersAfterRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_CONFLICT);
+        assertEquals(HttpStatus.SC_CONFLICT, response.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertEquals(usersBeforeRequest.size(), usersAfterRequest.size());
     }
@@ -192,8 +192,8 @@ class UserControllerTest {
         ).andReturn();
 
         // When
-        assertEquals(changeUserResponse.getResponse().getStatus(), HttpStatus.SC_OK);
-        assertEquals(changedUsernameTokenResponse.getResponse().getStatus(), HttpStatus.SC_OK);
+        assertEquals(HttpStatus.SC_OK, changeUserResponse.getResponse().getStatus());
+        assertEquals(HttpStatus.SC_OK, changedUsernameTokenResponse.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertNull(userRepository.findByUsernameIgnoreCase(username));
         assertNotNull(userRepository.findByUsernameIgnoreCase(newUsername));
