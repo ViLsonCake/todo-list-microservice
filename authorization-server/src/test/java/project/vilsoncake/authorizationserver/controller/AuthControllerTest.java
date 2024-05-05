@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.apache.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -83,7 +83,7 @@ class AuthControllerTest {
         Matcher matcher = pattern.matcher(resultJson);
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.OK.value());
+        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_OK);
         assertNotNull(response.getResponse().getCookie("refresh_token"));
         assertTrue(response.getResponse().getCookie("refresh_token").isHttpOnly());
         assertTrue(matcher.find());
@@ -101,7 +101,7 @@ class AuthControllerTest {
         ).andReturn();
 
         // When
-        assertEquals(response.getResponse().getStatus(), HttpStatus.UNAUTHORIZED.value());
+        assertEquals(response.getResponse().getStatus(), HttpStatus.SC_UNAUTHORIZED);
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
     }
 
@@ -136,7 +136,7 @@ class AuthControllerTest {
         Matcher matcher = pattern.matcher(resultJson);
 
         // When
-        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.OK.value());
+        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.SC_OK);
         assertNotNull(refreshResponse.getResponse().getCookie("refresh_token"));
         assertTrue(refreshResponse.getResponse().getCookie("refresh_token").isHttpOnly());
         assertTrue(matcher.find());
@@ -168,7 +168,7 @@ class AuthControllerTest {
         ).andReturn();
 
         // When
-        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.UNAUTHORIZED.value());
+        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.SC_UNAUTHORIZED);
     }
 
     @Test
@@ -197,7 +197,7 @@ class AuthControllerTest {
         ).andReturn();
 
         // When
-        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.UNAUTHORIZED.value());
+        assertEquals(refreshResponse.getResponse().getStatus(), HttpStatus.SC_UNAUTHORIZED);
         assertTrue(refreshResponse.getResponse().getContentAsString().contains("\"message\":"));
     }
 }
