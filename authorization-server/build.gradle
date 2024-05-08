@@ -44,6 +44,7 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.testcontainers:testcontainers:1.19.7'
     testImplementation 'com.github.dasniko:testcontainers-keycloak:3.3.0'
+    testImplementation 'org.testcontainers:kafka:1.19.7'
 }
 
 dependencyManagement {
