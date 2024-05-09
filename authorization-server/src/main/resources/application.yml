@@ -44,3 +44,14 @@ keycloak:
   admin-client-id: ${KEYCLOAK_CLIENT_NAME}
   admin-client-secret: ${KEYCLOAK_CLIENT_SECRET}
   token-url: /realms/${keycloak.realm}/protocol/openid-connect/token
+
+kafka:
+  url: ${KAFKA_URL}
+  topic-name: ${KAFKA_TOPIC_NAME}
+  group-id: ${KAFKA_GROUP_ID}
+  partitions-count: ${KAFKA_PARTITIONS_COUNT}
+  replication-factor: ${KAFKA_REPLICATION_FACTOR}
+
+user:
+  username-change-event-type: ${USER_USERNAME_CHANGE_EVENT_TYPE}
+  user-remove-event-type: ${USER_REMOVE_EVENT_TYPE}

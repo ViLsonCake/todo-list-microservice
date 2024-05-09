@@ -139,16 +139,15 @@ public class UserServiceImpl implements UserService {
         if (response.getStatus() < 300 && response.getStatus() >= 200) {
             UserEntity userEntity = userRepository.findByUsernameIgnoreCase(username);
             userRepository.delete(userEntity);
+            UserEventDto removeUserEventDto = new UserEventDto(
+                    userEventProperties.getUserRemoveEventType(),
+                    username,
+                    Map.of()
+            );
+            kafkaProducer.sendUserEvent(removeUserEventDto);
+
             return Map.of("message", String.format("User \"%s\" has been removed", username));
         }
-
-        UserEventDto removeUserEventDto = new UserEventDto(
-                userEventProperties.getUserRemoveEventType(),
-                username,
-                Map.of()
-        );
-
-        kafkaProducer.sendUserEvent(removeUserEventDto);
 
         throw new UsernameNotFoundException("User not been removed");
     }
