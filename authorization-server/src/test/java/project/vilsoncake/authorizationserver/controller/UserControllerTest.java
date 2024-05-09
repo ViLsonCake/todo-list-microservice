@@ -14,9 +14,13 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 import project.vilsoncake.authorizationserver.dto.TokenDto;
 import project.vilsoncake.authorizationserver.entity.UserEntity;
+import project.vilsoncake.authorizationserver.kafka.KafkaConsumer;
+import project.vilsoncake.authorizationserver.property.UserEventProperties;
 import project.vilsoncake.authorizationserver.repository.UserRepository;
 
 import java.util.List;
@@ -38,22 +42,31 @@ class UserControllerTest {
     private UserRepository userRepository;
 
     @Autowired
+    private KafkaConsumer kafkaConsumer;
+
+    @Autowired
+    private UserEventProperties userEventProperties;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     static final KeycloakContainer keycloakContainer = new KeycloakContainer("quay.io/keycloak/keycloak:22.0.5")
             .withRealmImportFile("keycloak/realm-export.json");
     static final PostgreSQLContainer<?> postgresqlContainer = new PostgreSQLContainer<>("postgres:latest");
+    static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:latest"));
 
     @BeforeAll
     static void startContainers() {
         keycloakContainer.start();
         postgresqlContainer.start();
+        kafkaContainer.start();
     }
 
     @AfterAll
     static void stopContainers() {
         keycloakContainer.stop();
         postgresqlContainer.stop();
+        kafkaContainer.stop();
     }
 
     @BeforeEach
@@ -63,6 +76,8 @@ class UserControllerTest {
         user.setUsername("testuser");
         user.setEmail("testuser@gmail.com");
         userRepository.save(user);
+
+        kafkaConsumer.reset();
     }
 
     @AfterEach
@@ -79,6 +94,8 @@ class UserControllerTest {
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () ->
                 keycloakContainer.getAuthServerUrl() + "/realms/todo-realm");
         registry.add("keycloak.server-url", keycloakContainer::getAuthServerUrl);
+
+        registry.add("kafka.url", kafkaContainer::getBootstrapServers);
     }
 
     @Test
@@ -191,9 +208,13 @@ class UserControllerTest {
                         .content(String.format(tokenRequest, newUsername, password))
         ).andReturn();
 
+        Thread.sleep(1000);
+
         // When
         assertEquals(HttpStatus.SC_OK, changeUserResponse.getResponse().getStatus());
         assertEquals(HttpStatus.SC_OK, changedUsernameTokenResponse.getResponse().getStatus());
+        assertTrue(kafkaConsumer.isMessageConsumed());
+        assertTrue(kafkaConsumer.getPayload().contains(userEventProperties.getUsernameChangeEventType()));
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertNull(userRepository.findByUsernameIgnoreCase(username));
         assertNotNull(userRepository.findByUsernameIgnoreCase(newUsername));
@@ -231,9 +252,12 @@ class UserControllerTest {
                         .content(jsonChangeUsernameRequest)
         ).andReturn();
 
+        Thread.sleep(1000);
+
         // When
         assertEquals(HttpStatus.SC_CONFLICT, changeUserResponse.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+        assertFalse(kafkaConsumer.isMessageConsumed());
         assertNotNull(userRepository.findByUsernameIgnoreCase(username));
     }
 
@@ -265,9 +289,13 @@ class UserControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
         ).andReturn();
 
+        Thread.sleep(1000);
+
         // When
         assertEquals(HttpStatus.SC_OK, removeUserResponse.getResponse().getStatus());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+        assertTrue(kafkaConsumer.isMessageConsumed());
+        assertTrue(kafkaConsumer.getPayload().contains(userEventProperties.getUserRemoveEventType()));
         assertNull(userRepository.findByUsernameIgnoreCase(username));
     }
 }
