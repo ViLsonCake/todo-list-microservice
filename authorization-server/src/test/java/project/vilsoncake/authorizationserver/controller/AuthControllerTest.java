@@ -3,6 +3,7 @@ package project.vilsoncake.authorizationserver.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import jakarta.servlet.http.Cookie;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.apache.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -69,7 +69,12 @@ class AuthControllerTest {
     @Test
     @DisplayName("Login user test with valid user credentials")
     void loginTestUser_validCredentials() throws Exception {
-        String jsonRequest = "{\"username\":\"testuser\",\"password\":\"janepass\"}";
+        String jsonRequest = """
+                {
+                  "username": "testuser",
+                  "password": "janepass"
+                }
+                """;
 
         var response = mockMvc.perform(
                 post("/auth/login")
@@ -92,7 +97,12 @@ class AuthControllerTest {
     @Test
     @DisplayName("Login user test with invalid user credentials")
     void loginTestUser_invalidCredentials() throws Exception {
-        String jsonRequest = "{\"username\":\"user\",\"password\":\"janepass\"}";
+        String jsonRequest = """
+                {
+                  "username": "user",
+                  "password": "janepass"
+                }
+                """;
 
         var response = mockMvc.perform(
                 post("/auth/login")
@@ -108,7 +118,12 @@ class AuthControllerTest {
     @Test
     @DisplayName("Refresh token test with valid tokens")
     void refreshToken_withValidTokens() throws Exception {
-        String jsonRequest = "{\"username\":\"testuser\",\"password\":\"janepass\"}";
+        String jsonRequest = """
+                {
+                  "username": "testuser",
+                  "password": "janepass"
+                }
+                """;
 
         // Getting tokens
         var response = mockMvc.perform(
@@ -145,7 +160,12 @@ class AuthControllerTest {
     @Test
     @DisplayName("Refresh token test with invalid access token")
     void refreshToken_withInValidAccessToken() throws Exception {
-        String jsonRequest = "{\"username\":\"testuser\",\"password\":\"janepass\"}";
+        String jsonRequest = """
+                {
+                  "username": "testuser",
+                  "password": "janepass"
+                }
+                """;
 
         // Getting tokens
         var response = mockMvc.perform(
@@ -174,7 +194,12 @@ class AuthControllerTest {
     @Test
     @DisplayName("Refresh token test with invalid refresh token")
     void refreshToken_withinValidRefreshToken() throws Exception {
-        String jsonRequest = "{\"username\":\"testuser\",\"password\":\"janepass\"}";
+        String jsonRequest = """
+                {
+                  "username": "testuser",
+                  "password": "janepass"
+                }
+                """;
 
         // Getting tokens
         var response = mockMvc.perform(
