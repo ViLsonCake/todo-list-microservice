@@ -33,3 +33,7 @@ eureka:
 kafka:
   topic-name: ${KAFKA_TOPIC_NAME}
   group-id: ${KAFKA_GROUP_ID}
+
+elastic:
+  host: ${ELASTIC_HOST}
+  port: ${ELASTIC_PORT}
