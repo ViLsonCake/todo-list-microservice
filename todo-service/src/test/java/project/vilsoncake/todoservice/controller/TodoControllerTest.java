@@ -19,6 +19,7 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 import project.vilsoncake.todoservice.document.TodoDocument;
 import project.vilsoncake.todoservice.dto.TodoDto;
+import project.vilsoncake.todoservice.dto.TodosDto;
 import project.vilsoncake.todoservice.keycloak.KeycloakUtils;
 import project.vilsoncake.todoservice.repository.TodoRepository;
 
@@ -98,7 +99,16 @@ class TodoControllerTest {
         todo2.setCompleted(true);
         todo2.setOwner("testuser");
 
-        todoRepository.saveAll(List.of(todo1, todo2));
+        TodoDocument todo3 = new TodoDocument();
+        todo2.setId(UUID.randomUUID());
+        todo2.setTitle("Third init todo");
+        todo2.setCategory("Home");
+        todo2.setText("Third init todo text");
+        todo2.setCreatedAt(new Date());
+        todo2.setCompleted(true);
+        todo2.setOwner("testuser");
+
+        todoRepository.saveAll(List.of(todo1, todo2, todo3));
     }
 
     @AfterEach
@@ -209,7 +219,7 @@ class TodoControllerTest {
                 }
                 """, title);
 
-        var createTodoResponse = mockMvc.perform(
+        mockMvc.perform(
                 post("/todos")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -242,6 +252,80 @@ class TodoControllerTest {
 
         // When
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
+        assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+    }
+
+    @Test
+    @DisplayName("Get all user todos test with default filter")
+    void getAllUserTodos_defaultFilter() throws Exception {
+        String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
+        String username = "testuser";
+
+        var response = mockMvc.perform(
+                get("/todos")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+        ).andReturn();
+
+        TodosDto todosDto = objectMapper.readValue(response.getResponse().getContentAsString(), TodosDto.class);
+
+        // When
+        assertEquals(HttpStatus.SC_OK, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
+        assertEquals(todoRepository.findAllByOwnerIgnoreCase(username).size(), todosDto.getTodos().size());
+    }
+
+    @Test
+    @DisplayName("Get all user todos test with only-completed filter")
+    void getAllUserTodos_withOnlyCompletedFilter() throws Exception {
+        String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
+
+        var response = mockMvc.perform(
+                get("/todos")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .param("filter", "only-completed")
+        ).andReturn();
+
+        TodosDto todosDto = objectMapper.readValue(response.getResponse().getContentAsString(), TodosDto.class);
+
+        // When
+        assertEquals(HttpStatus.SC_OK, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
+        assertTrue(todosDto.getTodos().stream().allMatch(TodoDto::isCompleted));
+    }
+
+    @Test
+    @DisplayName("Get all user todos test with only-not-completed filter")
+    void getAllUserTodos_withOnlyNotCompletedFilter() throws Exception {
+        String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
+
+        var response = mockMvc.perform(
+                get("/todos")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .param("filter", "only-not-completed")
+        ).andReturn();
+
+        TodosDto todosDto = objectMapper.readValue(response.getResponse().getContentAsString(), TodosDto.class);
+
+        // When
+        assertEquals(HttpStatus.SC_OK, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
+        assertTrue(todosDto.getTodos().stream().noneMatch(TodoDto::isCompleted));
+    }
+
+    @Test
+    @DisplayName("Get all user todos test with incorrect filter")
+    void getAllUserTodos_withIncorrectFilter() throws Exception {
+        String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
+
+        var response = mockMvc.perform(
+                get("/todos")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .param("filter", "incorrect-filter")
+        ).andReturn();
+
+        // When
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getResponse().getStatus());
         assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
     }
