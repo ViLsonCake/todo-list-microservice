@@ -49,12 +49,15 @@ class TodoControllerTest {
     private ObjectMapper objectMapper;
 
     static final KeycloakContainer keycloakContainer = new KeycloakContainer("quay.io/keycloak/keycloak:22.0.5")
+            .withStartupAttempts(10)
             .withRealmImportFile("keycloak/realm-export.json");
 
     static final ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.11.1")
+            .withStartupAttempts(10)
             .withEnv("discovery.type", "single-node");
 
     static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:latest"))
+            .withStartupAttempts(10)
             .withEmbeddedZookeeper();
 
     @DynamicPropertySource
@@ -100,22 +103,22 @@ class TodoControllerTest {
         todo2.setOwner("testuser");
 
         TodoDocument todo3 = new TodoDocument();
-        todo2.setId(UUID.randomUUID());
-        todo2.setTitle("Third init todo");
-        todo2.setCategory("Home");
-        todo2.setText("Third init todo text");
-        todo2.setCreatedAt(new Date());
-        todo2.setCompleted(true);
-        todo2.setOwner("testuser");
+        todo3.setId(UUID.randomUUID());
+        todo3.setTitle("Third init todo");
+        todo3.setCategory("Home");
+        todo3.setText("Third init todo text");
+        todo3.setCreatedAt(new Date());
+        todo3.setCompleted(true);
+        todo3.setOwner("testuser");
 
         TodoDocument todo4 = new TodoDocument();
-        todo2.setId(UUID.randomUUID());
-        todo2.setTitle("Fourth init todo");
-        todo2.setCategory("Work");
-        todo2.setText("Fourth init todo text");
-        todo2.setCreatedAt(new Date());
-        todo2.setCompleted(true);
-        todo2.setOwner("testuser");
+        todo4.setId(UUID.randomUUID());
+        todo4.setTitle("Fourth init todo");
+        todo4.setCategory("Work");
+        todo4.setText("Fourth init todo text");
+        todo4.setCreatedAt(new Date());
+        todo4.setCompleted(true);
+        todo4.setOwner("testuser");
 
         todoRepository.saveAll(List.of(todo1, todo2, todo3, todo4));
     }
