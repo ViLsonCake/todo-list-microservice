@@ -24,6 +24,7 @@ import project.vilsoncake.todocategoryservice.keycloak.KeycloakUtils;
 import project.vilsoncake.todocategoryservice.repository.CategoryRepository;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -133,9 +134,33 @@ class CategoryControllerTest {
 
     @Test
     @DisplayName("Add new category test with already used name")
-    void addCategory_withInvalidData() throws Exception {
+    void addCategory_withAlreadyUsedName() throws Exception {
         String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
         String categoryName = "Init category";
+        String jsonCategoryRequest = String.format("""
+                {
+                  "name": "%s"
+                }
+                """, categoryName);
+
+        var response = mockMvc.perform(
+                post("/categories")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonCategoryRequest)
+        ).andReturn();
+
+        // When
+        assertEquals(HttpStatus.SC_CONFLICT, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
+        assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+    }
+
+    @Test
+    @DisplayName("Add new category test with default category name")
+    void addCategory_withDefaultCategoryName() throws Exception {
+        String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
+        String categoryName = CategoryConst.DEFAULT_CATEGORIES.get(new Random().nextInt(CategoryConst.DEFAULT_CATEGORIES.size()));
         String jsonCategoryRequest = String.format("""
                 {
                   "name": "%s"
