@@ -30,7 +30,8 @@ public class CategoryServiceImpl implements CategoryService {
         if (username == null) {
             throw new UsernameNotFoundException("Username not found");
         }
-        if (categoryRepository.findByOwnerIgnoreCaseAndNameIgnoreCase(username, categoryDto.getName()).isPresent()) {
+        if (categoryRepository.findByOwnerIgnoreCaseAndNameIgnoreCase(username, categoryDto.getName()).isPresent() ||
+                CategoryConst.DEFAULT_CATEGORIES.stream().anyMatch(category -> category.equalsIgnoreCase(categoryDto.getName()))) {
             throw new CategoryAlreadyExistsException(String.format("Category \"%s\" already exists", categoryDto.getName()));
         }
 
