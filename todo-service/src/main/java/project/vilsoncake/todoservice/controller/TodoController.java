@@ -64,11 +64,11 @@ public class TodoController {
     }
 
     @PatchMapping
-    public ResponseEntity<Map<String, TodoDto>> changeCompleted(
+    public ResponseEntity<TodoDto> changeCompleted(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam String title
     ) {
-        return ResponseEntity.ok(Map.of("todo", todoService.changeCompleted(jwt, title)));
+        return ResponseEntity.ok(todoService.changeCompleted(jwt, title));
     }
 
     @DeleteMapping
