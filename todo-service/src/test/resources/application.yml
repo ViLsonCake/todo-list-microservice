@@ -33,10 +33,15 @@ eureka:
 kafka:
   topic-name: ${KAFKA_TOPIC_NAME}
   group-id: ${KAFKA_GROUP_ID}
+  server-url: ${KAFKA_URL}
 
 elastic:
   host: ${ELASTIC_HOST}
   port: ${ELASTIC_PORT}
+
+user:
+  username-change-event-type: ${USER_USERNAME_CHANGE_EVENT_TYPE}
+  user-remove-event-type: ${USER_REMOVE_EVENT_TYPE}
 
 keycloak:
   realm: ${KEYCLOAK_REALM_NAME}
