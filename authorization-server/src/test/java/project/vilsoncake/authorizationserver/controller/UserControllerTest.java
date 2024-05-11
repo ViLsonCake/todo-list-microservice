@@ -104,7 +104,6 @@ class UserControllerTest {
     void createUser_withValidUserData() throws Exception {
         String username = "newuser";
         String password = "testpass";
-//        String createUserRequest = String.format("{\"username\":\"%s\",\"email\":\"example@gmail.com\",\"password\":\"%s\"}", username, password);
         String createUserRequest = String.format("""
                 {
                   "username": "%s",
@@ -112,7 +111,7 @@ class UserControllerTest {
                   "password": "%s"
                 }
                 """, username, password);
-//        String tokenRequest = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+
         String tokenRequest = String.format("""
                 {
                   "username": "%s",
@@ -138,6 +137,7 @@ class UserControllerTest {
 
         // When
         assertEquals(HttpStatus.SC_CREATED, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertTrue(response.getResponse().getContentAsString().contains(username));
         assertEquals(usersBeforeRequest.size() + 1, usersAfterRequest.size());
@@ -148,7 +148,6 @@ class UserControllerTest {
     @Test
     @DisplayName("Create user test with conflict username")
     void createUser_withConflictUsername() throws Exception {
-//        String jsonRequest = "{\"username\":\"testuser\",\"email\":\"example@gmail.com\",\"password\":\"testpass\"}";
         String jsonRequest = """
                 {
                   "username": "testuser",
@@ -176,7 +175,6 @@ class UserControllerTest {
     @Test
     @DisplayName("Create user test with conflict email")
     void createUser_withConflictEmail() throws Exception {
-//        String jsonRequest = "{\"username\":\"test\",\"email\":\"testuser@gmail.com\",\"password\":\"testpass\"}";
         String jsonRequest = """
                 {
                   "username": "test",
@@ -184,6 +182,7 @@ class UserControllerTest {
                   "password": "testpass"
                 }
                 """;
+
         List<UserEntity> usersBeforeRequest = StreamSupport.stream(userRepository.findAll().spliterator(), false).toList();
 
         var response = mockMvc.perform(
@@ -207,7 +206,6 @@ class UserControllerTest {
         String newUsername = "newUsername";
         String email = "changeuser@gmail.com";
         String password = "testpass";
-//        String createUserRequest = String.format("{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\"}", username, email, password);
         String createUserRequest = String.format("""
                 {
                   "username": "%s",
@@ -216,7 +214,6 @@ class UserControllerTest {
                 }
                 """, username, email, password);
 
-//        String tokenRequest = "{\"username\":\"%s\",\"password\":\"%s\"}";
         String tokenRequest = """
                 {
                   "username": "%s",
@@ -257,6 +254,7 @@ class UserControllerTest {
         // When
         assertEquals(HttpStatus.SC_OK, changeUserResponse.getResponse().getStatus());
         assertEquals(HttpStatus.SC_OK, changedUsernameTokenResponse.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, changeUserResponse.getResponse().getContentType());
         assertTrue(kafkaConsumer.isMessageConsumed());
         assertTrue(kafkaConsumer.getPayload().contains(userEventProperties.getUsernameChangeEventType()));
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
@@ -271,7 +269,6 @@ class UserControllerTest {
         String newUsedUsername = "testuser";
         String email = "changeuserinvalid@gmail.com";
         String password = "testpass";
-//        String createUserRequest = String.format("{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\"}", username, email, password);
         String createUserRequest = String.format("""
                 {
                   "username": "%s",
@@ -280,7 +277,6 @@ class UserControllerTest {
                 }
                 """, username, email, password);
 
-//        String tokenRequest = "{\"username\":\"%s\",\"password\":\"%s\"}";
         String tokenRequest = """
                 {
                   "username": "%s",
@@ -310,7 +306,7 @@ class UserControllerTest {
                         .content(jsonChangeUsernameRequest)
         ).andReturn();
 
-        Thread.sleep(5000);
+        Thread.sleep(1500);
 
         // When
         assertEquals(HttpStatus.SC_CONFLICT, changeUserResponse.getResponse().getStatus());
@@ -325,7 +321,6 @@ class UserControllerTest {
         String username = "removeUser";
         String email = "removeuser@gmail.com";
         String password = "testpass";
-//        String createUserRequest = String.format("{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\"}", username, email, password);
         String createUserRequest = String.format("""
                 {
                   "username": "%s",
@@ -334,7 +329,6 @@ class UserControllerTest {
                 }
                 """, username, email, password);
 
-//        String tokenRequest = "{\"username\":\"%s\",\"password\":\"%s\"}";
         String tokenRequest = """
                 {
                   "username": "%s",
@@ -361,10 +355,11 @@ class UserControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
         ).andReturn();
 
-        Thread.sleep(5000);
+        Thread.sleep(1500);
 
         // When
         assertEquals(HttpStatus.SC_OK, removeUserResponse.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
         assertTrue(kafkaConsumer.isMessageConsumed());
         assertTrue(kafkaConsumer.getPayload().contains(userEventProperties.getUserRemoveEventType()));

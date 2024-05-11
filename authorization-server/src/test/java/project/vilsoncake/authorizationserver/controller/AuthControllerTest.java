@@ -89,6 +89,7 @@ class AuthControllerTest {
 
         // When
         assertEquals(HttpStatus.SC_OK, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
         assertNotNull(response.getResponse().getCookie("refresh_token"));
         assertTrue(response.getResponse().getCookie("refresh_token").isHttpOnly());
         assertTrue(matcher.find());
@@ -152,6 +153,7 @@ class AuthControllerTest {
 
         // When
         assertEquals(HttpStatus.SC_OK, refreshResponse.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
         assertNotNull(refreshResponse.getResponse().getCookie("refresh_token"));
         assertTrue(refreshResponse.getResponse().getCookie("refresh_token").isHttpOnly());
         assertTrue(matcher.find());
