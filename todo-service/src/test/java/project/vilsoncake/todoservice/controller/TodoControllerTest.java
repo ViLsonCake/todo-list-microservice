@@ -108,7 +108,16 @@ class TodoControllerTest {
         todo2.setCompleted(true);
         todo2.setOwner("testuser");
 
-        todoRepository.saveAll(List.of(todo1, todo2, todo3));
+        TodoDocument todo4 = new TodoDocument();
+        todo2.setId(UUID.randomUUID());
+        todo2.setTitle("Fourth init todo");
+        todo2.setCategory("Work");
+        todo2.setText("Fourth init todo text");
+        todo2.setCreatedAt(new Date());
+        todo2.setCompleted(true);
+        todo2.setOwner("testuser");
+
+        todoRepository.saveAll(List.of(todo1, todo2, todo3, todo4));
     }
 
     @AfterEach
@@ -328,5 +337,41 @@ class TodoControllerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getResponse().getStatus());
         assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
         assertTrue(response.getResponse().getContentAsString().contains("\"message\":"));
+    }
+
+    @Test
+    @DisplayName("Get all user todos by category test")
+    void getAllUserTodosByCategory() throws Exception {
+        String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
+        String category = "Home";
+
+        var response = mockMvc.perform(
+                get("/todos/" + category)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+        ).andReturn();
+
+        TodosDto todosDto = objectMapper.readValue(response.getResponse().getContentAsString(), TodosDto.class);
+
+        // When
+        assertEquals(HttpStatus.SC_OK, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
+        assertTrue(todosDto.getTodos().stream().allMatch(todoDto -> todoDto.getCategory().equals(category)));
+    }
+
+    @Test
+    @DisplayName("Search todos by query test")
+    void searchTodos() throws Exception {
+        String accessToken = keycloakUtils.getTestUserAuthTokens().getAccessToken();
+        String query = "text";
+
+        var response = mockMvc.perform(
+                get("/todos/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .param("s", query)
+        ).andReturn();
+
+        // When
+        assertEquals(HttpStatus.SC_OK, response.getResponse().getStatus());
+        assertEquals(jakarta.ws.rs.core.MediaType.APPLICATION_JSON, response.getResponse().getContentType());
     }
 }
