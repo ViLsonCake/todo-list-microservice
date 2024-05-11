@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-import project.vilsoncake.todocategoryservice.constant.DefaultCategory;
+import project.vilsoncake.todocategoryservice.constant.CategoryConst;
 import project.vilsoncake.todocategoryservice.document.CategoryDocument;
 import project.vilsoncake.todocategoryservice.dto.CategoryDto;
 import project.vilsoncake.todocategoryservice.dto.UserEventDto;
@@ -74,7 +74,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .stream().map(CategoryDocument::getName)
                 .toList();
 
-        return Stream.concat(userCategories.stream(), DefaultCategory.defaultCategories.stream()).toList();
+        return Stream.concat(userCategories.stream(), CategoryConst.DEFAULT_CATEGORIES.stream()).toList();
     }
 
     @Override

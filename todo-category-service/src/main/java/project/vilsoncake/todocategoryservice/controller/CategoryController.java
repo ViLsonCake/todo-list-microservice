@@ -22,20 +22,17 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<Map<String, String>> addCategory(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestBody CategoryDto categoryDto) {
+            @RequestBody CategoryDto categoryDto
+    ) {
         return new ResponseEntity<>(
                 Map.of(
-                        "message", String
-                                .format("Category %s has been added",
-                                        categoryService.addCategory(jwt, categoryDto).getName()
-                                )
-                ),
-                HttpStatus.CREATED
+                        "message", String.format("Category %s has been added", categoryService.addCategory(jwt, categoryDto).getName())
+                ), HttpStatus.CREATED
         );
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, List<String >>> getAllCategoriesByOwner(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Map<String, List<String>>> getAllCategoriesByOwner(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(
                 Map.of("categories", categoryService.getAllCategoriesByOwner(jwt))
         );
@@ -44,11 +41,7 @@ public class CategoryController {
     @DeleteMapping
     public ResponseEntity<Map<String, String>> removeCategory(@AuthenticationPrincipal Jwt jwt, @RequestParam String name) {
         return ResponseEntity.ok(
-                Map.of("message", String
-                        .format("Category %s has been removed",
-                                categoryService.removeCategory(jwt, name)
-                        )
-                )
+                Map.of("message", String.format("Category %s has been removed", categoryService.removeCategory(jwt, name)))
         );
     }
 }
