@@ -30,6 +30,9 @@ spring:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
 
+  kafka:
+    bootstrap-servers: ${KAFKA_URL}
+
 eureka:
   client:
     service-url:

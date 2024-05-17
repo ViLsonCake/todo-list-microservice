@@ -25,6 +25,9 @@ spring:
     hibernate:
       ddl-auto: update
 
+  kafka:
+    bootstrap-servers: ${KAFKA_URL}
+
   datasource:
     url: jdbc:postgresql://localhost:5434/${POSTGRES_DB}
     username: ${POSTGRES_USER}
