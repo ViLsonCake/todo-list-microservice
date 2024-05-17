@@ -1,0 +1,67 @@
+server:
+  port: 8765
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      routes:
+        #        Authorization server routes:
+        - id: users-route
+          uri: lb://authorization-server
+          predicates:
+            - Path=/users
+            - Method=POST,PATCH,DELETE
+
+        - id: auth-login-route
+          uri: lb://authorization-server
+          predicates:
+            - Path=/auth/login
+            - Method=POST
+
+        - id: auth-refresh-route
+          uri: lb://authorization-server
+          predicates:
+            - Path=/auth/refresh
+            - Method=POST
+
+        #      Todos category service routes:
+        - id: todo-category-route
+          uri: lb://todo-category-service
+          predicates:
+            - Path=/categories
+            - Method=GET,POST,DELETE
+
+        #        Todos service routes:
+        - id: todo-service-route
+          uri: lb://todo-service
+          predicates:
+            - Path=/todos
+            - Method=GET,POST,PATCH,DELETE
+
+        - id: todo-search-route
+          uri: lb://todo-service
+          predicates:
+            - Path=/todos/search
+            - Method=GET
+
+        - id: todo-category-route
+          uri: lb://todo-service
+          predicates:
+            - Path=/todos/{category}
+            - Method=GET
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST}:8761/eureka
+  instance:
+    prefer-ip-address: true
