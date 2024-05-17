@@ -10,6 +10,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - todo_storage:/data/postgres
+    networks:
+      - eureka-network
     ports:
       - '5434:5432'
 
@@ -23,6 +25,8 @@ services:
       POSTGRES_DB: ${KEYCLOAK_DB}
     volumes:
       - keycloak_storage:/data/postgres
+    networks:
+      - eureka-network
     ports:
       - '5433:5432'
 
@@ -43,6 +47,8 @@ services:
       - '8080:8080'
     depends_on:
       - postgres_keycloak
+    networks:
+      - eureka-network
     command:
       - start-dev
 
@@ -55,6 +61,8 @@ services:
       - '9200:9200'
     volumes:
       - todo_storage:/var/lib/elastic/data
+    networks:
+      - eureka-network
 
   mongodb:
     image: mongo:latest
@@ -66,6 +74,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongo_storage:/mongo/data
+    networks:
+      - eureka-network
 
   zookeeper:
     image: wurstmeister/zookeeper:latest
@@ -73,9 +83,11 @@ services:
       - '2181:2181'
     networks:
       - kafka-network
+      - eureka-network
 
   kafka:
     image: wurstmeister/kafka:latest
+    container_name: kafka
     ports:
       - '9092:9092'
     environment:
@@ -90,6 +102,54 @@ services:
       - zookeeper
     networks:
       - kafka-network
+      - eureka-network
+
+  eureka-server:
+    container_name: eureka-server
+    build:
+      context: /eureka-server
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - '8761:8761'
+    networks:
+      - eureka-network
+
+  api-gateway:
+    build:
+      context: /api-gateway
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - '8765:8765'
+    depends_on:
+      - eureka-server
+    networks:
+      - eureka-network
+
+  authorization-server:
+    build:
+      context: /authorization-server
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - '8083:8083'
+    depends_on:
+      - eureka-server
+      - api-gateway
+      - keycloak
+      - kafka
+    networks:
+      - eureka-network
 
 volumes:
   keycloak_storage:
@@ -99,3 +159,4 @@ volumes:
 
 networks:
   kafka-network:
+  eureka-network:
